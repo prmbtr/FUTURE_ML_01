@@ -1,0 +1,74 @@
+# Import Libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from prophet import Prophet
+from prophet.diagnostics import cross_validation, performance_metrics
+
+# Dataset
+ven = pd.read_csv(r"/content/mock_kaggle.csv")
+ven
+
+# Dropping null values(no null values in this dataset)
+v= ven.dropna()
+v_1 = v.drop(['estoque','preco'],axis=1)
+v_1
+
+# Renaming the columns
+df = v_1.rename(columns={"data": "ds", "venda": "y"})
+df
+
+# Changing dtype as datetime
+df['ds'] = pd.to_datetime(df['ds'])
+df['ds'].dtype
+df.dtypes
+
+# Checking the data
+start_date = df['ds'].min()
+end_date = df['ds'].max()
+total_days = (end_date - start_date).days
+total_years = total_days / 365.25  # Leap years included
+
+print("Start Date:", start_date)
+print("End Date:", end_date)
+print("Total Days:", total_days)
+print("Approx Years:", round(total_years, 2))
+
+# Plot
+plt.figure(figsize=(12, 6))
+plt.plot(df['ds'], df['y'], color='blue', linewidth=1.5)
+plt.title("Daily Sales Over Time")
+plt.xlabel("Date")
+plt.ylabel("Sales (venda)")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# Initialize the model
+model = Prophet()
+model.fit(df)
+
+# Forecasting
+future_dates = model.make_future_dataframe(periods=365, freq='D')
+pred = model.predict(future_dates)
+prediction.head()
+model.plot(prediction)
+model.plot_components(prediction)
+
+# Perform cross-validation
+df_cv = cross_validation(model,
+                         initial='600 days',
+                         period='180 days',
+                         horizon='180 days',
+                         parallel="threads")
+
+# Evaluate performance
+df_p = performance_metrics(df_cv)
+
+# Show top 5 rows
+df_cv.head(), df_p.head()
+
+
+df_forecast = forecast[['ds', 'yhat', 'yhat_lower', 'yhat_upper']]
+df_merged = pd.merge(df, df_forecast, on='ds', how='left')
+df_merged.to_csv("actual_vs_forecast.csv", index=False)
